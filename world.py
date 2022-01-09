@@ -50,7 +50,7 @@ class Biome():
 
 
     def loop(self):
-        new_foods = []
+        num_new_foods = 0
         eaten_foods = []
         for fn, fish in enumerate(self.fishes):
             # eat if possible
@@ -76,10 +76,8 @@ class Biome():
                         child.spawnAt(fish.x,fish.y)
                         self.fishes.append(child)
 
-                    new_food = Creature.Food()
-                    new_food.spawnRandom(10,490,10,490)
-                    new_foods.append(new_food)
-
+                    num_new_foods += 1
+                    
                     break
 
             fish.smell(self.smell_map[fish.y+fish.dy*2,fish.x+fish.dx*2])
@@ -109,8 +107,19 @@ class Biome():
             for f_idx in eaten_foods:
                 self.foods.pop(f_idx)
 
-        if new_foods:
-            self.foods = self.foods + new_foods
+        if num_new_foods > 0:
+            if len(self.fishes) > 250:
+                num_new_foods -= 1
+            elif len(self.fishes) < 200:
+                num_new_foods += 1
+            elif len(self.fishes) < 100:
+                num_new_foods += 3
+
+            for i in range(num_new_foods):
+                new_food = Creature.Food()
+                new_food.spawnRandom(10,490,10,490)
+                self.foods.append(new_food)
+
             self.food_idx_map = self.food_idx_map*0 - 1
             self.smell_map *= 0
             for i, food in enumerate(self.foods):
