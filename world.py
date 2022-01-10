@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 import Creature
+import time
 
 class Biome():
     def __init__(self):
@@ -50,7 +52,6 @@ class Biome():
 
 
     def loop(self):
-        num_new_foods = 0
         eaten_foods = []
         for fn, fish in enumerate(self.fishes):
             # eat if possible
@@ -66,17 +67,16 @@ class Biome():
                     print(f'# fish = {len(self.fishes)}, # food = {len(self.foods)}')
                     children = []
                     if len(self.fishes) < 50:
-                        children = fish.reproduce(10)
-                    elif len(self.fishes) < 150:
                         children = fish.reproduce(7)
-                    elif len(self.fishes) < 300:
+                    elif len(self.fishes) < 150:
+                        children = fish.reproduce(3)
+                    elif len(self.fishes) < 1000:
+                    #else:
                         children = fish.reproduce(1)
                     
                     for child in children:
-                        child.spawnAt(fish.x,fish.y)
+                        child.spawnAt(fish.x-2*fish.dx,fish.y-2*fish.dy)
                         self.fishes.append(child)
-
-                    num_new_foods += 1
                     
                     break
 
@@ -84,10 +84,14 @@ class Biome():
             fish.think()
             fish.move()
             
+        # explicitly preventing from extinction
+        the_last_fish = self.fishes[0]
+
+        # kill condition
         for i in range(len(self.fishes)-1,-1,-1):
-            # kill condition
             if self.fishes[i].fullness < 0:
                 self.fishes.pop(i)
+        # wall condition
         for fish in self.fishes:
             if fish.x > 490 and fish.dx > 0:
                 fish.angle = 180 - fish.angle
@@ -102,24 +106,28 @@ class Biome():
                 fish.angle = 360 - fish.angle
                 fish.dy *= -1
 
+        # explicitly preventing from extinction
+        if len(self.fishes) < 1:
+            children = the_last_fish.reproduce(40)
+            for child in children:
+                child.spawnRandom(10,490,10,490)
+            self.fishes += children
+
+        # remove eaten foods, reproduce(duplicate) food
         if eaten_foods:
             eaten_foods.sort(reverse=True)
             for f_idx in eaten_foods:
                 self.foods.pop(f_idx)
 
-        if num_new_foods > 0:
-            if len(self.fishes) > 250:
-                num_new_foods -= 1
-            elif len(self.fishes) < 200:
-                num_new_foods += 1
-            elif len(self.fishes) < 100:
-                num_new_foods += 3
-
-            for i in range(num_new_foods):
+        any_new_food = False
+        for food in self.foods:
+            for i in range(food.reproduce()):
+                any_new_food = True
                 new_food = Creature.Food()
                 new_food.spawnRandom(10,490,10,490)
                 self.foods.append(new_food)
 
+        if eaten_foods or any_new_food:
             self.food_idx_map = self.food_idx_map*0 - 1
             self.smell_map *= 0
             for i, food in enumerate(self.foods):
@@ -130,9 +138,7 @@ class Biome():
 
 
 
-        # print(np.max(self.smell_map))
-        
-            
+        # redraw world map
         self.world_map *= 0
         for fish in self.fishes:
             M = cv2.getRotationMatrix2D((2,2),fish.angle,1)
@@ -141,19 +147,45 @@ class Biome():
         for food in self.foods:
             self.world_map[food.y-1:food.y+2,food.x-1:food.x+2] = self.food_img
 
+        # show graphics
         cv2.imshow('map',self.world_map)
+        out.write(cv2.cvtColor(self.world_map, cv2.COLOR_GRAY2BGR))
         cv2.imshow('smell',self.smell_map)
+
+        return len(self.fishes), len(self.foods)
 
         
         
 
 if __name__ == '__main__':
+    lct = time.localtime()
+    lct_str = '%4d%02d%02d%02d%02d'%(
+        lct.tm_year,lct.tm_mon,lct.tm_mday,lct.tm_hour,lct.tm_min)
+
     myWorld = Biome()
     myWorld.setup()
     fr = 0
-    while cv2.waitKey(33) < 0:
-        myWorld.loop()
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(f'fish_mung{lct_str}.mp4',fourcc,30.0,(500,500))
+    fish_population = []
+    food_population = []
+
+    while cv2.waitKey(10) < 0:
+        nfish, nfood = myWorld.loop()
+        if nfish*nfood == 0:
+            break
+        fish_population.append(nfish)
+        food_population.append(nfood)
         fr += 1
         print(f'\r{fr}', end='')
+
+    out.release()
+
+    plt.figure(figsize=(5,5))
+    plt.plot(fish_population,label='fish population')
+    plt.plot(food_population, label='food population')
+    plt.legend()
+    plt.show()
 
 

@@ -81,6 +81,15 @@ class Food():
     def __init__(self):
         self.x = 0
         self.y = 0
+        self.age = 0
+
+    def reproduce(self):
+        if self.age > 150:
+            self.age = 0
+            return 1
+        else:
+            self.age += 1
+            return 0
 
     def spawnRandom(self, min_x, max_x, min_y, max_y):
         self.x = np.random.randint(min_x,max_x)
