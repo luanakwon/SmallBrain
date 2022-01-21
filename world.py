@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import Creature
 import time
+import os
 
 class Biome():
     def __init__(self):
@@ -50,6 +51,12 @@ class Biome():
         cv2.imshow('smell',self.smell_map)
         cv2.waitKey()
 
+    def save_model(self, dir_path, max_n):
+        if not os.path.isdir(dir_path):
+            os.makedirs(dir_path)
+        max_n = min(len(self.fishes), max_n)
+        for i, fish in enumerate(self.fishes[:max_n]):
+            np.save(os.path.join(dir_path,f'{i}'),fish.export_model())
 
     def loop(self):
         eaten_foods = []
@@ -158,6 +165,8 @@ class Biome():
         
 
 if __name__ == '__main__':
+    np.random.seed(31415)
+
     lct = time.localtime()
     lct_str = '%4d%02d%02d%02d%02d'%(
         lct.tm_year,lct.tm_mon,lct.tm_mday,lct.tm_hour,lct.tm_min)
@@ -166,8 +175,9 @@ if __name__ == '__main__':
     myWorld.setup()
     fr = 0
 
+    video_savepath = os.path.join('Videos',f'fish_mung{lct_str}.mp4')
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(f'fish_mung{lct_str}.mp4',fourcc,30.0,(500,500))
+    out = cv2.VideoWriter(video_savepath,fourcc,30.0,(500,500))
     fish_population = []
     food_population = []
 
@@ -177,6 +187,8 @@ if __name__ == '__main__':
             break
         fish_population.append(nfish)
         food_population.append(nfood)
+        if fr > 10000 and fr%1000 == 0:
+            myWorld.save_model(os.path.join('Model saves',lct_str),10)
         fr += 1
         print(f'\r{fr}', end='')
 

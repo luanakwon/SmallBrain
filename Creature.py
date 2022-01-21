@@ -5,6 +5,7 @@ class Fish():
         self.brain = np.random.normal(0,1,(brain_size,brain_size))
         self.cells = np.zeros((brain_size,1))
 
+
         self.x = 0
         self.y = 0
         self.dx = 0
@@ -25,8 +26,8 @@ class Fish():
         self.cells = 1/(1+np.exp(-self.cells)) # sigmoid
     
     def move(self):
-        left_v = self.cells[2]
-        right_v = self.cells[3]
+        left_v = self.cells[-2]
+        right_v = self.cells[-1]
 
         # no move, less energy loss
         if left_v < 0.5 and right_v < 0.5:
@@ -76,6 +77,42 @@ class Fish():
             children.append(child)
 
         return children
+
+    def export_model(self):
+        blank = np.concatenate((self.cells, self.brain),axis=1)
+        print(blank.shape)
+        return blank
+
+    def import_model(self, model):
+        self.cells = model[:,0]
+        self.brain = model[:,1:]
+
+class Fish2(Fish):
+    def __init__(self, brain_size):
+        super(Fish2, self).__init__()
+        
+        self.brain = np.random.normal(0,1,(brain_size,brain_size))
+        self.cells = np.zeros((brain_size+2,1))
+
+    def think(self):
+        cell_in = self.cells[:-2]
+        cell_out = np.matmul(self.brain,cell_in)
+        cell_out = 1/(1+np.exp(-self.cells))
+        self.cells *= 0
+        self.cells[2:] = cell_out
+
+    def export_model(self):
+        brain_size = self.brain.shape[0]
+        cell_size = self.cells.shape[0]
+        blank = np.zeros((brain_size+1,cell_size))
+        blank[0,:] = self.cells
+        blank[1:,:brain_size] = self.brain
+
+        return blank
+
+    def import_model(self, model):
+        self.cells = model[0,:]
+        self.brain = model[1:,:self.brain.shape[1]]
 
 class Food():
     def __init__(self):
