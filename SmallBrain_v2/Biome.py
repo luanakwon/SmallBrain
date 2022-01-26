@@ -55,15 +55,34 @@ class Biome():
         cv2.waitKey()
 
     def update(self):
+        change_in_smell = False
+        new_fishes = []
         for fish in self.fishes:
             dx, dy = Fish.angle2v[fish.angle]
             intensity = self.smell_map[fish.y+dy*2,fish.x+dx*2]
             fish.smell(intensity)
-            if intensity >= 180:
-                fish.eat()
+            if intensity >= Food.smell_max:
+                for i, food in enumerate(self.foods):
+                    if abs(fish.x-food.x) + abs(fish.y-food.y) < 7:
+                        fish.eat()
+                        child = fish.reproduce()
+                        child.spawnAt(fish.x-3,fish.y-3)
+                        new_fishes.append(child)
+                        self.foods.pop(i)
+                        change_in_smell = True
+                        break
+ 
             fish.think()
             fish.move()
         
+        # kill condition
+        for i in range(len(self.fishes)-1,-1,-1):
+            if self.fishes[i].life < 0:
+                self.fishes.pop(i)
+
+        # add new fish
+        self.fishes += new_fishes
+
         # wall condition
         for fish in self.fishes:
             if fish.x > self.world_size-5 and fish.angle == 0:
@@ -75,4 +94,15 @@ class Biome():
             elif fish.y < 5 and fish.angle == 1:
                 fish.angle = 3
 
+        new_foods = []
+        for food in self.foods:
+            if food.reproduce():
+                change_in_smell = True
+                new_food = Food()
+                new_food.spawnRandom(5,self.world_size-5,5,self.world_size-5)
+                new_foods.append(new_food)
+        self.foods += new_foods
+        
+        if change_in_smell:
+            self.update_smell_map()
         self.update_map()

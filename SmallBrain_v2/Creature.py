@@ -20,6 +20,7 @@ class Brain():
     def think(self):
         brain_in = np.concatenate((self.input_cells,self.brain_cells),axis=1)
         brain_out = np.matmul(brain_in,self.brain_weight) # FC layer
+        brain_out[brain_out<-500] = -500 # exp overflows from 710
         brain_out = 1/(1+np.exp(-brain_out)) # sigmoid activation func
         # brain_out = brain_out[brain_out>0] # relu
         self.brain_cells = brain_out[:,:self.brain_size].copy()
@@ -84,14 +85,18 @@ class Fish():
             self.x += dx
             self.y += dy
             self.fullness = -1
+            self.life -= 0.003
         elif left:
             self.angle = (self.angle+1)%4
             self.fullness = -1
+            self.life -= 0.002
         elif right:
             self.angle = (self.angle+3)%4
             self.fullness = -1
+            self.life -= 0.002
         else:
             self.fullness = -0.1
+            self.life -= 0.001
             
     def reproduce(self):
         child = Fish(self.brain.brain_size)
@@ -118,7 +123,8 @@ class Food():
         [0,1,0]
     ],dtype=np.uint8)*255
 
-    smell_img = getInverseSquareMat(99,10000,50,180)
+    smell_max = 97
+    smell_img = getInverseSquareMat(149,10000,100,smell_max)
 
     def __init__(self):
         self.x = 0
@@ -126,7 +132,7 @@ class Food():
         self.age = 0
 
     def reproduce(self):
-        if self.age > 150:
+        if self.age > 200:
             self.age = 0
             return 1
         else:
