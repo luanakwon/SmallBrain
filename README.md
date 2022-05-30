@@ -2,7 +2,7 @@
 Made some garbage changes here  
 some more changes here  
 and here  
-saaasad
+saaasad    kkk   
 Trying shallow RNN on reinforcement learning
 
 The goel of this project is to make the model learn without backpropagation nor reinforcement.
