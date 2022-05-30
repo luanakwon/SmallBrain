@@ -1,7 +1,7 @@
 # smallbrain
 Made some garbage changes here  
 some more changes here  
-and here  
+and here  hgjg  
 saaasad    kkk   
 Trying shallow RNN on reinforcement learning
 
