@@ -86,13 +86,21 @@ class Biome():
         # wall condition
         for fish in self.fishes:
             if fish.x > self.world_size-5 and fish.angle == 0:
-                fish.angle = 2
+                fish.x -= Fish.angle2v[fish.angle][0]
+                fish.y -= Fish.angle2v[fish.angle][1]
+                fish.senseTouch('front')
             elif fish.x < 5 and fish.angle == 2:
-                fish.angle = 0
+                fish.x -= Fish.angle2v[fish.angle][0]
+                fish.y -= Fish.angle2v[fish.angle][1]
+                fish.senseTouch('front')
             if fish.y > self.world_size-5 and fish.angle == 3:
-                fish.angle = 1
+                fish.x -= Fish.angle2v[fish.angle][0]
+                fish.y -= Fish.angle2v[fish.angle][1]
+                fish.senseTouch('front')
             elif fish.y < 5 and fish.angle == 1:
-                fish.angle = 3
+                fish.x -= Fish.angle2v[fish.angle][0]
+                fish.y -= Fish.angle2v[fish.angle][1]
+                fish.senseTouch('front')
 
         new_foods = []
         for food in self.foods:

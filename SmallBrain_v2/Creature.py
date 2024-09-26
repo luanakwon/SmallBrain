@@ -25,6 +25,7 @@ class Brain():
         # brain_out = brain_out[brain_out>0] # relu
         self.brain_cells = brain_out[:,:self.brain_size].copy()
         self.output_cells = brain_out[:,self.brain_size:].copy()
+        self.input_cells *= 0 # reset input cells
 
     def copy_with_noise(self):
         new_brain = Brain(self.input_size,self.output_size,self.brain_size)
@@ -40,7 +41,7 @@ class Brain():
 Fish class
 can smell, eat, feel hunger(and fullness)
 can move forward, turn 90 degree
-cycle : smell-eat-think-move
+cycle : smell-eat-think(use input and reset)-move-touch
 '''
 class Fish():
     angle2v = {0:(1,0),1:(0,-1),2:(-1,0),3:(0,1)}
@@ -54,9 +55,9 @@ class Fish():
     ],dtype=np.uint8)*255
 
     def __init__(self, brain_size):
-        # input : smell, fullness
+        # input : smell, fullness, touch(front/back/left/right)
         # output : left, right
-        self.brain = Brain(2,2,brain_size)
+        self.brain = Brain(6,2,brain_size)
         
         self.life = 1
         self.smell_intensity = 0
@@ -72,6 +73,16 @@ class Fish():
     def eat(self):
         self.life = 1
         self.fullness = 10
+
+    def senseTouch(self, side):
+        if side == 'front':
+            self.brain.input_cells[0,2] = 1
+        elif side == 'back':
+            self.brain.input_cells[0,3] = 1
+        elif side == 'left':
+            self.brain.input_cells[0,4] = 1
+        elif side == 'right':
+            self.brain.input_cells[0,5] = 1
     
     def think(self):
         self.brain.input_cells[0,0] = self.smell_intensity
